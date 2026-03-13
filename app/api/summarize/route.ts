@@ -2,41 +2,47 @@ import { NextResponse } from "next/server";
 import { YoutubeTranscript } from "youtube-transcript";
 
 function getVideoId(url: string) {
-  const match = url.match(/(?:v=|youtu\.be\/)([^&\n?#]+)/);
+  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([^&\n?#]+)/);
   return match ? match[1] : null;
 }
 
-function getPromptForMode(mode: string, transcript: string, url: string) {
-
+function buildPrompt(mode: string, context: string, url: string) {
   switch (mode) {
-
     case "short":
       return `
-Summarize this YouTube video in about 120 words.
+You are an AI that summarizes YouTube videos.
 
-Transcript:
-${transcript}
+Write a concise summary (~120 words).
+
+Video URL:
+${url}
+
+Context:
+${context}
 `;
 
     case "detailed":
       return `
-Create a detailed explanation of this YouTube video.
+You are an AI that explains YouTube videos.
 
-Include:
-- Main topics
-- Explanation of ideas
-- Important examples
+Provide a detailed explanation with headings.
 
-Transcript:
-${transcript}
+Video URL:
+${url}
+
+Context:
+${context}
 `;
 
     case "bullets":
       return `
-Convert this YouTube video transcript into bullet point notes.
+Convert this video into bullet point notes.
 
-Transcript:
-${transcript}
+Video URL:
+${url}
+
+Context:
+${context}
 `;
 
     case "study":
@@ -44,47 +50,53 @@ ${transcript}
 Create study notes from this video.
 
 Include:
-- Key concepts
-- Important definitions
-- Key takeaways
+• Key concepts
+• Important ideas
+• Takeaways
 
-Transcript:
-${transcript}
+Video URL:
+${url}
+
+Context:
+${context}
 `;
 
     case "timeline":
       return `
-Create a timeline style summary of this YouTube video.
+Create a timeline style breakdown of the video.
 
 Format example:
+00:00 - Introduction
+01:20 - Main concept
+03:40 - Example
 
-00:00 - Introduction  
-01:30 - Main topic explanation  
-03:40 - Important example  
-05:50 - Key conclusion
+Video URL:
+${url}
 
-Transcript:
-${transcript}
+Context:
+${context}
 `;
 
     default:
       return `
 Summarize this YouTube video.
 
-Transcript:
-${transcript}
+Video URL:
+${url}
+
+Context:
+${context}
 `;
   }
 }
 
 export async function POST(req: Request) {
   try {
-
     const { url, mode = "short" } = await req.json();
 
     if (!url) {
       return NextResponse.json(
-        { error: "YouTube URL is required" },
+        { error: "YouTube URL required" },
         { status: 400 }
       );
     }
@@ -98,35 +110,31 @@ export async function POST(req: Request) {
       );
     }
 
-    let transcriptText = "";
-    let isFallback = false;
+    let context = "";
+    let transcriptFetched = false;
 
     try {
+      const transcript = await YoutubeTranscript.fetchTranscript(videoId);
 
-      const transcriptData = await YoutubeTranscript.fetchTranscript(videoId);
-
-      transcriptText = transcriptData
-        .map((item) => item.text)
-        .join(" ");
+      context = transcript.map((t) => t.text).join(" ");
+      transcriptFetched = true;
 
     } catch (error) {
-
-      console.warn("Transcript unavailable. Using fallback.");
-
-      isFallback = true;
-
-      transcriptText = `
-The transcript for this YouTube video could not be fetched.
-
-Video URL:
-${url}
-
-Based on the video topic, generate a reasonable summary.
-`;
-
+      console.warn("Transcript unavailable, using fallback");
     }
 
-    const prompt = getPromptForMode(mode, transcriptText, url);
+    if (!transcriptFetched) {
+      context = `
+Transcript unavailable.
+
+Use the YouTube URL and general knowledge to infer the video topic and generate a reasonable summary.
+
+URL:
+${url}
+`;
+    }
+
+    const prompt = buildPrompt(mode, context, url);
 
     const aiResponse = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -159,13 +167,11 @@ Based on the video topic, generate a reasonable summary.
     return NextResponse.json({ summary });
 
   } catch (error) {
-
     console.error(error);
 
     return NextResponse.json(
       { error: "Failed to summarize video" },
       { status: 500 }
     );
-
   }
 }
