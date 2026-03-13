@@ -30,7 +30,7 @@ export default function AuthButton() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin
+        redirectTo: `${window.location.origin}/`
       }
     });
   };
@@ -49,9 +49,9 @@ export default function AuthButton() {
         <div className="flex items-center gap-3">
           {user.user_metadata?.avatar_url && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img 
-              src={user.user_metadata.avatar_url} 
-              alt={user.user_metadata.full_name || "User avatar"} 
+            <img
+              src={user.user_metadata.avatar_url}
+              alt={user.user_metadata.full_name || "User avatar"}
               className="w-8 h-8 rounded-full border border-zinc-700"
             />
           )}
