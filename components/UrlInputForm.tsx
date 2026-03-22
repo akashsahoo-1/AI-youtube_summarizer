@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import SummaryCard from "./SummaryCard";
 import SummaryModeSelector, { MODES } from "./SummaryModeSelector";
 import Loader from "./Loader";
+import RecentSummaries from "./RecentSummaries";
+import VideoChat from "./VideoChat";
 import { Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
@@ -22,14 +24,28 @@ export default function UrlInputForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [user, setUser] = useState<User | null>(null);
-    const [metadata, setMetadata] = useState<{title: string, author: string} | null>(null);
+    const [metadata, setMetadata] = useState<{title: string, author: string, thumbnail: string} | null>(null);
     const [isEstimated, setIsEstimated] = useState(false);
+    const [length, setLength] = useState("Medium");
+    const [language, setLanguage] = useState("English");
+    const summaryRef = useRef<HTMLDivElement>(null);
 
     const handleReset = () => {
         setUrl("");
         setSummary("");
         setError("");
         setIsEstimated(false);
+    };
+
+    const loadFromHistory = (item: any) => {
+        setUrl(item.video_url);
+        setSummary(item.summary);
+        setMode(item.mode);
+        setError("");
+        setIsEstimated(false);
+        setTimeout(() => {
+             summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
     };
 
     useEffect(() => {
@@ -50,11 +66,11 @@ export default function UrlInputForm() {
 
     useEffect(() => {
         if (videoId) {
-            fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`)
+            fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.title) {
-                        setMetadata({ title: data.title, author: data.author_name });
+                        setMetadata({ title: data.title, author: data.author_name, thumbnail: data.thumbnail_url });
                     } else {
                         setMetadata(null);
                     }
@@ -94,6 +110,8 @@ export default function UrlInputForm() {
                 body: JSON.stringify({
                     url,
                     mode,
+                    length,
+                    language,
                     allowFallback: true,
                 }),
             });
@@ -106,6 +124,25 @@ export default function UrlInputForm() {
 
             setSummary(data.summary);
             setIsEstimated(data.isEstimated || false);
+            
+            setTimeout(() => {
+                summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+
+            if (user) {
+                try {
+                    await supabase.from('summaries').insert([
+                        {
+                            user_id: user.id,
+                            video_url: url,
+                            summary: data.summary,
+                            mode: mode
+                        }
+                    ]);
+                } catch (e) {
+                    console.error("Failed to save summary to DB", e);
+                }
+            }
 
         } catch (err) {
 
@@ -189,9 +226,16 @@ export default function UrlInputForm() {
                     >
 
                         {metadata && (
-                            <div className="px-3 pt-2 text-left">
-                                <h3 className="text-xl font-semibold text-white">{metadata.title}</h3>
-                                <p className="text-sm text-gray-400">{metadata.author}</p>
+                            <div className="flex items-center gap-4 px-3 pt-2 text-left mb-2">
+                                {metadata.thumbnail && (
+                                    <div className="flex-shrink-0">
+                                        <img src={metadata.thumbnail} alt={metadata.title} className="w-24 h-auto rounded-xl shadow-lg border border-white/10" />
+                                    </div>
+                                )}
+                                <div>
+                                    <h3 className="text-xl font-semibold text-white leading-tight">{metadata.title}</h3>
+                                    <p className="text-sm text-gray-400 mt-1">{metadata.author}</p>
+                                </div>
                             </div>
                         )}
 
@@ -205,13 +249,38 @@ export default function UrlInputForm() {
                     </motion.div>
                 )}
 
-                {/* SUMMARY MODES */}
+                {/* SUMMARY MODES & SETTINGS */}
 
-                <SummaryModeSelector
-                    selectedMode={mode}
-                    onSelect={setMode}
-                    disabled={loading}
-                />
+                <div className="flex flex-col gap-4 items-center mb-8">
+                    <SummaryModeSelector
+                        selectedMode={mode}
+                        onSelect={setMode}
+                        disabled={loading}
+                    />
+
+                    <div className="flex flex-wrap gap-4 items-center justify-center">
+                        <select 
+                            value={length} 
+                            onChange={(e) => setLength(e.target.value)} 
+                            disabled={loading}
+                            className="bg-black/40 backdrop-blur border border-white/10 text-gray-300 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-2 shadow-sm transition-all"
+                        >
+                            <option value="Short">Short Length</option>
+                            <option value="Medium">Medium Length</option>
+                            <option value="Long">Long Length</option>
+                        </select>
+                        <select 
+                            value={language} 
+                            onChange={(e) => setLanguage(e.target.value)} 
+                            disabled={loading}
+                            className="bg-black/40 backdrop-blur border border-white/10 text-gray-300 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-2 shadow-sm transition-all"
+                        >
+                            <option value="English">English</option>
+                            <option value="Hindi">Hindi</option>
+                            <option value="German">German</option>
+                        </select>
+                    </div>
+                </div>
 
                 {/* EMPTY STATE */}
 
@@ -251,22 +320,40 @@ export default function UrlInputForm() {
 
                 {/* SUMMARY */}
 
-                {!loading && summary && (
-                    <div className="mt-2 flex flex-col items-center">
-                        <SummaryCard summary={summary} isEstimated={isEstimated} />
-                        <motion.button
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                            onClick={handleReset}
-                            className="mt-6 px-8 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-gray-300 font-semibold transition-all duration-300 hover:scale-105"
-                        >
-                            Clear
-                        </motion.button>
-                    </div>
-                )}
+                <div ref={summaryRef} className="w-full">
+                    {!loading && summary && (
+                        <div className="mt-2 flex flex-col items-center">
+                            <SummaryCard summary={summary} isEstimated={isEstimated} />
+                            
+                            <VideoChat url={url} />
+
+                            <div className="flex gap-4 mt-8 mb-8">
+                                <motion.button
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                    onClick={(e) => handleSummarize(e)}
+                                    className="px-6 py-2.5 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/40 hover:to-indigo-500/40 border border-purple-500/30 rounded-full text-purple-300 font-semibold transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                                >
+                                    🔄 Regenerate
+                                </motion.button>
+                                <motion.button
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    onClick={handleReset}
+                                    className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-gray-300 font-semibold transition-all duration-300 hover:scale-105"
+                                >
+                                    Clear
+                                </motion.button>
+                            </div>
+                        </div>
+                    )}
+                </div>
 
             </div>
+
+            <RecentSummaries user={user} onSelect={loadFromHistory} />
 
         </div>
 

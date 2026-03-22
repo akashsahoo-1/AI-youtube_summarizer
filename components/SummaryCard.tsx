@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { AlignLeft, Copy, Check } from 'lucide-react';
+import { AlignLeft, Copy, Check, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Props {
@@ -23,6 +23,20 @@ export default function SummaryCard({ summary, isEstimated }: Props) {
     } catch (err) {
       console.error("Failed to copy:", err);
     }
+  };
+
+  const handleDownloadTxt = () => {
+    const element = document.createElement("a");
+    const file = new Blob([summary], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = "AI_YouTube_Summary.txt";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  const handleDownloadPdf = () => {
+    window.print();
   };
 
   return (
@@ -46,14 +60,31 @@ export default function SummaryCard({ summary, isEstimated }: Props) {
             </div>
           )}
         </div>
-        
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white"
-        >
-          {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-          {copied ? "Copied!" : "Copy Summary"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownloadTxt}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white"
+            title="Download TXT"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">TXT</span>
+          </button>
+          <button
+            onClick={handleDownloadPdf}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white"
+            title="Print to PDF"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">PDF</span>
+          </button>
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? "Copied to clipboard ✅" : <span className="hidden sm:inline">Copy</span>}
+          </button>
+        </div>
       </div>
       <div className="prose prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-semibold prose-headings:text-white prose-p:text-gray-300 prose-a:text-indigo-400 hover:prose-a:text-indigo-300 prose-li:text-gray-300 prose-strong:text-white">
         <ReactMarkdown>

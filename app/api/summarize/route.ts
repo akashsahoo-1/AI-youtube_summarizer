@@ -6,10 +6,10 @@ function getVideoId(url: string) {
   return match ? match[1] : null;
 }
 
-function buildPrompt(mode: string, context: string, url: string, transcriptFetched: boolean) {
+function buildPrompt(mode: string, context: string, url: string, transcriptFetched: boolean, length: string, language: string) {
   const baseInstruction = transcriptFetched 
-    ? "Analyze the transcript and generate accurate summary."
-    : "Transcript unavailable. Generate a best-effort summary based on likely topic. Clearly mention this is an estimated summary.";
+    ? `Analyze the transcript and generate accurate summary. Make the response length: ${length}. Generate response in ${language}.`
+    : `Transcript unavailable. Generate a best-effort summary based on likely topic. Clearly mention this is an estimated summary. Make the response length: ${length}. Generate response in ${language}.`;
   switch (mode) {
     case "short":
       return `
@@ -101,7 +101,7 @@ ${context}
 
 export async function POST(req: Request) {
   try {
-    const { url, mode = "short", allowFallback = false } = await req.json();
+    const { url, mode = "short", length = "Medium", language = "English", allowFallback = false } = await req.json();
 
     if (!url) {
       return NextResponse.json(
@@ -149,7 +149,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const prompt = buildPrompt(mode, context, url, transcriptFetched);
+    const prompt = buildPrompt(mode, context, url, transcriptFetched, length, language);
 
     const aiResponse = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
