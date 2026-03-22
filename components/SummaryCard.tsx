@@ -7,9 +7,10 @@ import { motion } from 'framer-motion';
 
 interface Props {
   summary: string;
+  isEstimated?: boolean;
 }
 
-export default function SummaryCard({ summary }: Props) {
+export default function SummaryCard({ summary, isEstimated }: Props) {
   const [copied, setCopied] = useState(false);
 
   if (!summary) return null;
@@ -32,11 +33,18 @@ export default function SummaryCard({ summary }: Props) {
       className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-[0_0_40px_rgba(168,85,247,0.2)] hover:scale-[1.01] transition-all duration-300 mt-6"
     >
       <div className="border-b border-white/10 pb-4 mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
-            <AlignLeft className="w-4 h-4 text-gray-300" />
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
+              <AlignLeft className="w-4 h-4 text-gray-300" />
+            </div>
+            <h2 className="text-lg font-semibold text-white m-0 tracking-wide">Summary Result</h2>
           </div>
-          <h2 className="text-lg font-semibold text-white m-0 tracking-wide">Summary Result</h2>
+          {isEstimated && (
+            <div className="inline-flex items-center px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-xs font-medium max-w-fit">
+              ⚠️ AI Estimated Summary (No transcript available)
+            </div>
+          )}
         </div>
         
         <button

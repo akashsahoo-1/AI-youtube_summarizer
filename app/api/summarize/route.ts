@@ -6,11 +6,15 @@ function getVideoId(url: string) {
   return match ? match[1] : null;
 }
 
-function buildPrompt(mode: string, context: string, url: string) {
+function buildPrompt(mode: string, context: string, url: string, transcriptFetched: boolean) {
+  const baseInstruction = transcriptFetched 
+    ? "Analyze the transcript and generate accurate summary."
+    : "Transcript unavailable. Generate a best-effort summary based on likely topic. Clearly mention this is an estimated summary.";
   switch (mode) {
     case "short":
       return `
 You are an AI that summarizes YouTube videos.
+${baseInstruction}
 
 Write a concise summary (~120 words).
 
@@ -24,6 +28,7 @@ ${context}
     case "detailed":
       return `
 You are an AI that explains YouTube videos.
+${baseInstruction}
 
 Provide a detailed explanation with headings.
 
@@ -37,6 +42,7 @@ ${context}
     case "bullets":
       return `
 Convert this video into bullet point notes.
+${baseInstruction}
 
 Video URL:
 ${url}
@@ -48,6 +54,7 @@ ${context}
     case "study":
       return `
 Create study notes from this video.
+${baseInstruction}
 
 Include:
 • Key concepts
@@ -64,6 +71,7 @@ ${context}
     case "timeline":
       return `
 Create a timeline style breakdown of the video.
+${baseInstruction}
 
 Format example:
 00:00 - Introduction
@@ -80,6 +88,7 @@ ${context}
     default:
       return `
 Summarize this YouTube video.
+${baseInstruction}
 
 Video URL:
 ${url}
@@ -130,18 +139,17 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       } else {
-        context = `
-Transcript unavailable.
-
-Use the YouTube URL and general knowledge to infer the video topic and generate a reasonable summary.
-
-URL:
-${url}
-`;
+        try {
+          const embedRes = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+          const embedData = await embedRes.json();
+          context = embedData.title ? `Video Title: ${embedData.title}` : `Topic inferred from URL: ${url}`;
+        } catch {
+          context = `Topic inferred from URL: ${url}`;
+        }
       }
     }
 
-    const prompt = buildPrompt(mode, context, url);
+    const prompt = buildPrompt(mode, context, url, transcriptFetched);
 
     const aiResponse = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -171,7 +179,7 @@ ${url}
       throw new Error("AI returned empty response");
     }
 
-    return NextResponse.json({ summary });
+    return NextResponse.json({ summary, isEstimated: !transcriptFetched });
 
   } catch (error) {
     console.error(error);

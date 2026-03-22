@@ -23,11 +23,13 @@ export default function UrlInputForm() {
     const [error, setError] = useState("");
     const [user, setUser] = useState<User | null>(null);
     const [metadata, setMetadata] = useState<{title: string, author: string} | null>(null);
+    const [isEstimated, setIsEstimated] = useState(false);
 
     const handleReset = () => {
         setUrl("");
         setSummary("");
         setError("");
+        setIsEstimated(false);
     };
 
     useEffect(() => {
@@ -82,6 +84,7 @@ export default function UrlInputForm() {
             setLoading(true);
             setError("");
             setSummary("");
+            setIsEstimated(false);
 
             const res = await fetch("/api/summarize", {
                 method: "POST",
@@ -91,6 +94,7 @@ export default function UrlInputForm() {
                 body: JSON.stringify({
                     url,
                     mode,
+                    allowFallback: true,
                 }),
             });
 
@@ -101,6 +105,7 @@ export default function UrlInputForm() {
             }
 
             setSummary(data.summary);
+            setIsEstimated(data.isEstimated || false);
 
         } catch (err) {
 
@@ -248,7 +253,7 @@ export default function UrlInputForm() {
 
                 {!loading && summary && (
                     <div className="mt-2 flex flex-col items-center">
-                        <SummaryCard summary={summary} />
+                        <SummaryCard summary={summary} isEstimated={isEstimated} />
                         <motion.button
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
