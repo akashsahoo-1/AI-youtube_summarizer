@@ -1,13 +1,34 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
   text?: string;
 }
 
-export default function Loader({ text = "Analyzing video and generating summary..." }: Props) {
+const defaultSteps = [
+  "Fetching transcript...",
+  "Analyzing video content...",
+  "Generating AI summary..."
+];
+
+export default function Loader({ text }: Props) {
+  const [stepIndex, setStepIndex] = useState(0);
+
+  useEffect(() => {
+    if (text) return;
+
+    const interval = setInterval(() => {
+      setStepIndex((prev) => (prev + 1) % defaultSteps.length);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [text]);
+
+  const displayText = text || defaultSteps[stepIndex];
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -20,14 +41,20 @@ export default function Loader({ text = "Analyzing video and generating summary.
           <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
         </div>
       </div>
-      <motion.p 
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="text-gray-400 font-medium tracking-wide animate-pulse"
-      >
-        {text}
-      </motion.p>
+      <div className="h-6 relative w-full flex justify-center items-center">
+        <AnimatePresence mode="wait">
+          <motion.p 
+            key={displayText}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.3 }}
+            className="text-gray-400 font-medium tracking-wide absolute"
+          >
+            {displayText}
+          </motion.p>
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }

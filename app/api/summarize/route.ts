@@ -92,7 +92,7 @@ ${context}
 
 export async function POST(req: Request) {
   try {
-    const { url, mode = "short" } = await req.json();
+    const { url, mode = "short", allowFallback = false } = await req.json();
 
     if (!url) {
       return NextResponse.json(
@@ -120,11 +120,17 @@ export async function POST(req: Request) {
       transcriptFetched = true;
 
     } catch (error) {
-      console.warn("Transcript unavailable, using fallback");
+      console.warn("Transcript unavailable");
     }
 
     if (!transcriptFetched) {
-      context = `
+      if (!allowFallback) {
+        return NextResponse.json(
+          { error: "Transcript not available for this video. Please try another video with captions enabled." },
+          { status: 400 }
+        );
+      } else {
+        context = `
 Transcript unavailable.
 
 Use the YouTube URL and general knowledge to infer the video topic and generate a reasonable summary.
@@ -132,6 +138,7 @@ Use the YouTube URL and general knowledge to infer the video topic and generate 
 URL:
 ${url}
 `;
+      }
     }
 
     const prompt = buildPrompt(mode, context, url);

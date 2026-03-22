@@ -22,6 +22,13 @@ export default function UrlInputForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [user, setUser] = useState<User | null>(null);
+    const [metadata, setMetadata] = useState<{title: string, author: string} | null>(null);
+
+    const handleReset = () => {
+        setUrl("");
+        setSummary("");
+        setError("");
+    };
 
     useEffect(() => {
 
@@ -37,8 +44,24 @@ export default function UrlInputForm() {
         return () => subscription.unsubscribe();
 
     }, []);
-
     const videoId = getVideoId(url);
+
+    useEffect(() => {
+        if (videoId) {
+            fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.title) {
+                        setMetadata({ title: data.title, author: data.author_name });
+                    } else {
+                        setMetadata(null);
+                    }
+                })
+                .catch(() => setMetadata(null));
+        } else {
+            setMetadata(null);
+        }
+    }, [videoId]);
 
     async function handleSummarize(e?: React.FormEvent) {
 
@@ -133,6 +156,21 @@ export default function UrlInputForm() {
 
             </form>
 
+            {!url && !loading && !summary && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mb-8"
+                >
+                    <button
+                        onClick={() => setUrl("https://www.youtube.com/watch?v=aircAruvnKk")}
+                        className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors hover:scale-105"
+                    >
+                        Try Demo Video
+                    </button>
+                </motion.div>
+            )}
+
             {/* VIDEO PREVIEW */}
 
             <div className="w-full max-w-4xl">
@@ -142,8 +180,15 @@ export default function UrlInputForm() {
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
-                        className="mb-8 w-full p-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl"
+                        className="mb-8 w-full p-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl flex flex-col gap-3"
                     >
+
+                        {metadata && (
+                            <div className="px-3 pt-2 text-left">
+                                <h3 className="text-xl font-semibold text-white">{metadata.title}</h3>
+                                <p className="text-sm text-gray-400">{metadata.author}</p>
+                            </div>
+                        )}
 
                         <iframe
                             src={`https://www.youtube.com/embed/${videoId}`}
@@ -162,6 +207,18 @@ export default function UrlInputForm() {
                     onSelect={setMode}
                     disabled={loading}
                 />
+
+                {/* EMPTY STATE */}
+
+                {!videoId && !loading && !error && !summary && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-gray-400 text-center mt-10"
+                    >
+                        <p>Paste a YouTube link to generate an AI summary</p>
+                    </motion.div>
+                )}
 
                 {/* ERROR */}
 
@@ -183,15 +240,24 @@ export default function UrlInputForm() {
                         animate={{ opacity: 1 }}
                         className="mt-8"
                     >
-                        <Loader text="Analyzing video and generating summary..." />
+                        <Loader />
                     </motion.div>
                 )}
 
                 {/* SUMMARY */}
 
                 {!loading && summary && (
-                    <div className="mt-2">
+                    <div className="mt-2 flex flex-col items-center">
                         <SummaryCard summary={summary} />
+                        <motion.button
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            onClick={handleReset}
+                            className="mt-6 px-8 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-gray-300 font-semibold transition-all duration-300 hover:scale-105"
+                        >
+                            Clear
+                        </motion.button>
                     </div>
                 )}
 
