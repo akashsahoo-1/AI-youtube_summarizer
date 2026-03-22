@@ -225,26 +225,26 @@ export default function UrlInputForm() {
                         className="mb-8 w-full p-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl flex flex-col gap-3"
                     >
 
-                        {metadata && (
-                            <div className="flex items-center gap-4 px-3 pt-2 text-left mb-2">
-                                {metadata.thumbnail && (
-                                    <div className="flex-shrink-0">
-                                        <img src={metadata.thumbnail} alt={metadata.title} className="w-24 h-auto rounded-xl shadow-lg border border-white/10" />
-                                    </div>
-                                )}
-                                <div>
-                                    <h3 className="text-xl font-semibold text-white leading-tight">{metadata.title}</h3>
-                                    <p className="text-sm text-gray-400 mt-1">{metadata.author}</p>
-                                </div>
-                            </div>
-                        )}
-
                         <iframe
                             src={`https://www.youtube.com/embed/${videoId}`}
-                            className="w-full h-[380px] rounded-xl border-none"
+                            className="w-full h-[380px] rounded-xl border-none mb-2"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                         />
+
+                        {metadata && (
+                            <div className="flex bg-black/20 rounded-xl p-3 items-center gap-4 text-left border border-white/5">
+                                {metadata.thumbnail && (
+                                    <div className="flex-shrink-0">
+                                        <img src={metadata.thumbnail} alt={metadata.title} className="w-16 h-auto rounded-lg shadow-sm border border-white/10" />
+                                    </div>
+                                )}
+                                <div>
+                                    <h3 className="text-lg font-bold text-white leading-tight">{metadata.title}</h3>
+                                    <p className="text-sm text-gray-400 mt-0.5">{metadata.author}</p>
+                                </div>
+                            </div>
+                        )}
 
                     </motion.div>
                 )}
@@ -263,7 +263,7 @@ export default function UrlInputForm() {
                             value={length} 
                             onChange={(e) => setLength(e.target.value)} 
                             disabled={loading}
-                            className="bg-black/40 backdrop-blur border border-white/10 text-gray-300 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-2 shadow-sm transition-all"
+                            className="bg-zinc-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 block px-4 py-3 shadow-md transition-all outline-none cursor-pointer hover:bg-zinc-800 disabled:opacity-50"
                         >
                             <option value="Short">Short Length</option>
                             <option value="Medium">Medium Length</option>
@@ -273,7 +273,7 @@ export default function UrlInputForm() {
                             value={language} 
                             onChange={(e) => setLanguage(e.target.value)} 
                             disabled={loading}
-                            className="bg-black/40 backdrop-blur border border-white/10 text-gray-300 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-2 shadow-sm transition-all"
+                            className="bg-zinc-900 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 block px-4 py-3 shadow-md transition-all outline-none cursor-pointer hover:bg-zinc-800 disabled:opacity-50"
                         >
                             <option value="English">English</option>
                             <option value="Hindi">Hindi</option>

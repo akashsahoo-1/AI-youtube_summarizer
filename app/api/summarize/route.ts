@@ -9,7 +9,7 @@ function getVideoId(url: string) {
 function buildPrompt(mode: string, context: string, url: string, transcriptFetched: boolean, length: string, language: string) {
   const baseInstruction = transcriptFetched 
     ? `Analyze the transcript and generate accurate summary. Make the response length: ${length}. Generate response in ${language}.`
-    : `Transcript unavailable. Generate a best-effort summary based on likely topic. Clearly mention this is an estimated summary. Make the response length: ${length}. Generate response in ${language}.`;
+    : `Transcript unavailable. Generate a best-effort summary based on likely topic. Make the response length: ${length}. Generate response in ${language}.`;
   switch (mode) {
     case "short":
       return `

@@ -55,15 +55,19 @@ export default function SummaryCard({ summary, isEstimated }: Props) {
             <h2 className="text-lg font-semibold text-white m-0 tracking-wide">Summary Result</h2>
           </div>
           {isEstimated && (
-            <div className="inline-flex items-center px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-xs font-medium max-w-fit">
-              ⚠️ AI Estimated Summary (No transcript available)
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              className="inline-flex items-center px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold tracking-wide"
+            >
+              ✨ AI Summary
+            </motion.div>
           )}
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleDownloadTxt}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white hover:scale-105 active:scale-95 shadow-sm"
             title="Download TXT"
           >
             <Download className="w-3.5 h-3.5" />
@@ -71,7 +75,7 @@ export default function SummaryCard({ summary, isEstimated }: Props) {
           </button>
           <button
             onClick={handleDownloadPdf}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white hover:scale-105 active:scale-95 shadow-sm"
             title="Print to PDF"
           >
             <Download className="w-3.5 h-3.5" />
@@ -79,14 +83,14 @@ export default function SummaryCard({ summary, isEstimated }: Props) {
           </button>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:text-white hover:scale-105 active:scale-95 shadow-sm"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? "Copied to clipboard ✅" : <span className="hidden sm:inline">Copy</span>}
           </button>
         </div>
       </div>
-      <div className="prose prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-semibold prose-headings:text-white prose-p:text-gray-300 prose-a:text-indigo-400 hover:prose-a:text-indigo-300 prose-li:text-gray-300 prose-strong:text-white">
+      <div className="mx-auto max-w-3xl text-left prose prose-invert prose-p:leading-relaxed prose-p:tracking-wide prose-headings:font-bold prose-headings:text-white prose-p:text-gray-300 prose-a:text-indigo-400 hover:prose-a:text-indigo-300 prose-li:text-gray-300 prose-strong:text-white">
         <ReactMarkdown>
           {summary}
         </ReactMarkdown>

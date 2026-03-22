@@ -7,27 +7,10 @@ interface Props {
   text?: string;
 }
 
-const defaultSteps = [
-  "Fetching transcript...",
-  "Analyzing video content...",
-  "Generating AI summary...",
-  "Almost done..."
-];
+const defaultText = "AI is understanding your video...";
 
 export default function Loader({ text }: Props) {
-  const [stepIndex, setStepIndex] = useState(0);
-
-  useEffect(() => {
-    if (text) return;
-
-    const interval = setInterval(() => {
-      setStepIndex((prev) => (prev + 1) % defaultSteps.length);
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [text]);
-
-  const displayText = text || defaultSteps[stepIndex];
+  const displayText = text || defaultText;
 
   return (
     <motion.div 
