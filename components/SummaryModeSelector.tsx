@@ -32,8 +32,8 @@ export default function SummaryModeSelector({ selectedMode, onSelect, disabled }
             onClick={() => onSelect(mode.id)}
             className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border ${
               isActive 
-                ? "bg-white text-black border-white shadow-lg shadow-white/10 scale-105" 
-                : "bg-zinc-900 border-zinc-700 text-gray-300 hover:border-zinc-500 hover:text-white hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:border-zinc-700 disabled:hover:text-gray-300"
+                ? "bg-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)] border-transparent scale-105" 
+                : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-white/5 disabled:hover:text-gray-300"
             }`}
           >
             {mode.label}
